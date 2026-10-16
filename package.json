@@ -1,0 +1,79 @@
+{
+  "name": "dsh-file-handover",
+  "version": "0.1.0",
+  "description": "Hand a local file to any program's file picker: wait for the native Open dialog, fill the path through UI Automation, read it back to verify, then confirm. The target is always explicit — never guessed.",
+  "type": "module",
+  "main": "lib/index.js",
+  "bin": {
+    "dsh-file-handover": "bin/dsh-file-handover.mjs"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./plan": "./lib/plan.js",
+    "./handover": "./lib/handover.js",
+    "./handover.ps1": "./lib/handover.ps1",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "bin",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "file-dialog",
+    "file-picker",
+    "ui-automation",
+    "uia",
+    "windows",
+    "upload",
+    "automation",
+    "手",
+    "文件对话框"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/7gzgn/dsh-file-handover.git"
+  },
+  "homepage": "https://github.com/7gzgn/dsh-file-handover#readme",
+  "bugs": {
+    "url": "https://github.com/7gzgn/dsh-file-handover/issues"
+  },
+  "dsh": {
+    "compatibility": {
+      "dshReleases": {
+        "0.2.0-rc.2": "compatible"
+      }
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.4 <5.0.0",
+    "@deepseek-ai/dsh-system-prompt": ">=0.2.0-rc.2 <0.3.0-0",
+    "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-system-prompt": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    }
+  }
+}
