@@ -1,0 +1,4 @@
+# dsh-file-handover bundle patch: 把插件行插进 profile 名单。
+- insert:
+    - id: plugin-file-handover
+      name: 'dsh-file-handover'
