@@ -1,6 +1,6 @@
 {
   "name": "dsh-file-handover",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Hand a local file to any program's file picker: wait for the native Open dialog, fill the path through UI Automation, read it back to verify, then confirm. The target is always explicit — never guessed.",
   "type": "module",
   "main": "lib/index.js",
