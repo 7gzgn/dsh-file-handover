@@ -43,14 +43,20 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.dsh\profiles\desktop\node_m
 ### 工具
 
 ```
-handover_file  path=<绝对路径> [timeoutSec] [dryRun] [expectTitle] [maxAttempts] [click]
+handover_file  path=<绝对路径>                        # 单个文件
+handover_file  paths=[<绝对路径>, <绝对路径>, ...]      # 多选（v0.2.0，最多 12 个）
+handover_file  path=... [timeoutSec] [dryRun] [expectTitle] [maxAttempts] [click]
 ```
+
+**多选**（v0.2.0）：对话框支持多选时（网页的多图上传、微信发多个文件、系统"打开"框），
+给 `paths` 数组即可。插件把路径按 `"a" "b" "c"` 的格式填进去，**逐个回读**——
+少一个就算失败，不会出现"以为交了三个、实际只进了一个"。
 
 典型配合（以网页上传为例）：
 
 1. 用浏览器工具**真实点击**页面的"上传/选择文件"按钮（程序化 `input.click()` 不会弹出系统对话框）；
-2. 调 `handover_file` 递文件；
-3. 用浏览器工具**回读页面**，确认它真的收到了那个文件（名字/字节数）。
+2. 调 `handover_file` 递文件（单个用 `path`，多个用 `paths`）；
+3. 用浏览器工具**回读页面**，确认它真的收到了那些文件（名字/字节数）。
 
 ### 命令
 
