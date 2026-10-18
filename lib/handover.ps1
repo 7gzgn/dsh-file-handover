@@ -33,7 +33,11 @@
 # Output: exactly one JSON line on stdout. Exit code 0 = the file was handed over.
 
 param(
-  [Parameter(Mandatory = $true)][string]$Path,
+  [Parameter(Mandatory = $false)][string]$Path = '',
+  # Multiple files: newline separated absolute paths. The dialog gets them as
+  # "a" "b" "c" (quoted, space separated) which is what Explorer's picker expects
+  # for a multi-select Open dialog. -Path stays for the single-file case.
+  [string]$Paths = '',
   [int]$TimeoutSec = 30,
   [string]$FileNameAutomationId = '1148',
   [string]$ConfirmAutomationId = '1',
@@ -42,6 +46,32 @@ param(
   [switch]$DryRun,
   [switch]$NoConfirm
 )
+
+# ---- which paths are we handing over ------------------------------------------------
+$allPaths = @()
+if ($Paths.Trim() -ne '') {
+  $allPaths = @($Paths -split '[|\n]' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+} elseif ($Path.Trim() -ne '') {
+  $allPaths = @($Path.Trim())
+}
+if ($allPaths.Count -eq 0) {
+  $err = [ordered]@{ ok = $false; error = 'no-path (either -Path or -Paths is required)'; paths = @() }
+  $err | ConvertTo-Json -Compress
+  exit 1
+}
+
+# What actually goes into the file-name box.
+$FillText = if ($allPaths.Count -le 1) { $allPaths[0] } else { (@($allPaths | ForEach-Object { '"' + $_ + '"' }) -join ' ') }
+
+# Read-back check: exact match for one path; for several, every path must appear.
+function Test-Filled([string]$actual) {
+  if ($null -eq $actual) { return $false }
+  if ($actual -eq $FillText) { return $true }
+  foreach ($p in $allPaths) {
+    if ($actual.IndexOf($p, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) { return $false }
+  }
+  return $true
+}
 
 $ErrorActionPreference = 'Stop'
 $shouldConfirm = -not $NoConfirm
@@ -157,7 +187,10 @@ $attempts = New-Object System.Collections.ArrayList
 $result = [ordered]@{
   ok = $false
   dryRun = [bool]$DryRun
-  path = $Path
+  path = $allPaths[0]
+  paths = @($allPaths)
+  count = $allPaths.Count
+  fillText = $FillText
   dialog = $null
   attempts = @()
   seen = @()
@@ -296,12 +329,12 @@ try {
     if ($win32Edit -ne [IntPtr]::Zero) {
       $record = [ordered]@{ attempt = $i; method = 'win32-settext'; actual = $null; matched = $false; error = $null }
       try {
-        [void][HandoverWin32]::SetWindowText($win32Edit, $Path)
+        [void][HandoverWin32]::SetWindowText($win32Edit, $FillText)
         Start-Sleep -Milliseconds 250
         $actual = Get-ControlText $win32Edit
         $record.actual = $actual
         $lastActual = $actual
-        $record.matched = ($actual -eq $Path)
+        $record.matched = (Test-Filled $actual)
         if ($record.matched) { $filled = $true; $fillVerified = $true; $result.fillMethod = 'win32-settext' }
       } catch {
         $record.error = $_.Exception.Message
@@ -313,7 +346,7 @@ try {
 
     # 2b. UI Automation, over every element carrying the file-name id.
     foreach ($c in $uiaCandidates) {
-      $outcome = Set-ThroughElement $c $Path
+      $outcome = Set-ThroughElement $c $FillText
       $record = [ordered]@{ attempt = $i; method = 'uia'; actual = $null; matched = $false; error = $null }
       if ($null -eq $outcome) {
         $record.error = 'no-writable-pattern'
@@ -321,7 +354,7 @@ try {
         $record.method = $outcome.method
         $record.actual = $outcome.actual
         $lastActual = $outcome.actual
-        $record.matched = ($outcome.actual -eq $Path)
+        $record.matched = (Test-Filled $outcome.actual)
         if ($record.matched) { $filled = $true; $fillVerified = $true; $result.fillMethod = $outcome.method }
       }
       [void]$attempts.Add($record)
@@ -340,7 +373,7 @@ try {
       # box kept appending because select-all never landed. A paste carries the exact
       # bytes and does not go through the IME at all. (The garbled read-back sample is
       # kept in README.md - it cannot live here, this file must stay ASCII-only.)
-      Set-Clipboard -Value $Path
+      Set-Clipboard -Value $FillText
       [void][HandoverWin32]::SetForegroundWindow($dialogHwnd)
       Start-Sleep -Milliseconds 300
       [System.Windows.Forms.SendKeys]::SendWait('^a')
@@ -365,7 +398,7 @@ try {
       } else {
         $record.actual = $readBack
         $lastActual = $readBack
-        $record.matched = ("$readBack" -eq $Path)
+        $record.matched = (Test-Filled "$readBack")
         if ($record.matched) { $filled = $true; $fillVerified = $true; $result.fillMethod = 'clipboard' }
       }
     } catch {
