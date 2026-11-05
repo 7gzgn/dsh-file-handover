@@ -1,7 +1,7 @@
 {
   "name": "dsh-file-handover",
   "version": "0.2.1",
-  "description": "Hand a local file to any program's file picker: wait for the native Open dialog, fill the path through UI Automation, read it back to verify, then confirm. The target is always explicit — never guessed.",
+  "description": "把本机文件递给会话或网页，不弹系统文件对话框。 Hand a local file to a session or a page without opening the native file dialog.",
   "type": "module",
   "main": "lib/index.js",
   "bin": {
@@ -57,7 +57,8 @@
     "compatibility": {
       "dshReleases": {
         "0.2.0-rc.2": "compatible",
-        "0.2.1-rc.2": "compatible"
+        "0.2.1-rc.2": "compatible",
+        "0.2.2-rc.1": "compatible"
       }
     },
     "bundle": {
